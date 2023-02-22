@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>demo</title>
+</head>
+<script src="https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
+
+<script src="./data.json"></script>
+
+<script type="text/javascript">
+    $(function () {
+        var list;
+        var menu = new Map();//菜单
+        var brand = new Set();//品牌
+        // var height = document
+        var menuNodeSelected = [];
+        getData();
+
+        // document.getElementById('container').style.height = document.body.offsetHeight + 'px';
+        // 常用菜单
+        var menuTab = document.getElementById('menuTab');
+        menuTab.onclick = function () {
+            document.getElementById('menuTabChild').style.display = 'flex';
+            document.getElementById('menuTab').style.fontWeight = 'bolder';
+            document.getElementById('actionTabChild').style.display = 'none';
+            document.getElementById('action').style.fontWeight = 'normal';
+        }
+
+        // 快捷操作
+        var quickTab = document.getElementById('action');
+        quickTab.onclick = function () {
+            document.getElementById('menuTabChild').style.display = 'none';
+            document.getElementById('menuTab').style.fontWeight = 'normal';
+            document.getElementById('actionTabChild').style.display = 'block';
+            document.getElementById('action').style.fontWeight = 'bolder';
+        }
+
+
+
+        //所有商品
+        var all = document.getElementById("expandAll")
+        //所有商品列表
+        let menuEl = document.getElementById('menu');
+
+        //所有商品点击事件
+        all.onclick = function () {
+
+            // 展开
+            if (all.innerText == '+') {
+                all.innerText = "-";
+                let menuEl = document.getElementById('menu');
+
+                menu.forEach((value, key, map) => {
+
+                    let box = document.createElement('div');
+                    let menubox = document.createElement("div");
+                    menubox.setAttribute("class", "secondmenu")
+
+                    //title 
+                    let titleElement = document.createElement('div');
+                    titleElement.setAttribute("class", "title");
+
+                    // 图标
+                    let iconElement = document.createElement('span');
+                    iconElement.setAttribute("class", "expand");
+                    iconElement.setAttribute("id", "expand");
+                    iconElement.innerText = '+';
+                    // label
+                    let contentElement = document.createElement('div');
+                    contentElement.innerText = key;
+
+                    titleElement.appendChild(iconElement);//添加 图标
+                    titleElement.appendChild(contentElement);// 添加 label
+
+                    box.appendChild(titleElement);
+                    box.appendChild(menubox);
+
+                    //label 选中，高亮
+                    contentElement.onclick = function () {
+                        changeMenuSelected(contentElement);
+                    }
+                    //收起展开
+                    iconElement.onclick = function () {
+                        addListener(iconElement, menubox, key, value);
+                    }
+
+                    menuEl.appendChild(box);
+
+                })
+                // addListener();
+            } else if (all.innerText == '-') {
+                all.innerText = '+';
+                menuEl.innerHTML = ''
+
+            }
+        }
+
+        //label 菜单名选中
+        var titleLabel = document.getElementById('titleLabel');
+        titleLabel.onclick = function () {
+            changeMenuSelected(titleLabel)
+        }
+        //切换菜单，选中高亮
+        function changeMenuSelected(node) {
+            node.style.backgroundColor = '#01a9fd';
+            if (menuNodeSelected[0] && menuNodeSelected[0].parentNode.innerText != node.parentNode.innerText) {
+
+                menuNodeSelected[0].style.backgroundColor = '#fff';
+            } else if (menuNodeSelected[0]) {
+                menuNodeSelected[0].style.backgroundColor = '#fff';
+            }
+            menuNodeSelected.splice(0, 1, node);
+
+            console.log(menuNodeSelected)
+        }
+        // 一级分类点击事件实现
+        function addListener(iconElement, secondmenu, key, value) {
+            if (iconElement.innerText == '+') {
+                iconElement.innerText = "-";
+                value.forEach((element, index) => {
+                    let contentElement = document.createElement('div');
+                    contentElement.innerText = element;
+                    secondmenu.appendChild(contentElement);// 添加 label
+
+                    // TODO
+                    contentElement.onclick = function () {
+                        changeMenuSelected(contentElement);
+                    }
+                })
+            } else if (iconElement.innerText == '-') {
+                iconElement.innerText = '+';
+                secondmenu.innerHTML = '';
+
+            }
+        }
+
+        function getData() {
+            $.ajax({
+                url: "data.json",
+                dataType: "json",
+                success: function (data) {
+                    if (data === undefined) { return false; }
+                    list = data.data;
+                    let left = document.getElementById("#left")
+                    list.forEach((element, index) => {
+                        // console.log(element)
+                        if (menu.get(element.Class1_)) {
+                            // console.log("true")
+                            let value = JSON.parse(JSON.stringify(menu.get(element.Class1_)));
+                            // console.log(value);
+                            if (!value[element.brand]) {
+                                // value.push(element.brand)
+                                menu.set(element.Class1_, [...value, element.brand])
+                            }
+                        } else {
+                            menu.set(element.Class1_, [element.brand])
+                        }
+                        //品牌
+                        brand.add(element.brand);
+                    });
+                    initBrand();
+
+                }
+            })
+        }
+
+        function initBrand() {
+            brand.forEach((value, key, set) => {
+                let element = document.createElement('option');
+                element.value = value;
+                element.innerText = value;
+                document.getElementById('brand').appendChild(element);
+            })
+        }
+
+        var carTable = document.getElementById('buy-tab');//购物车
+        var msgContent = document.getElementById('msg-tab');//执行讯息
+
+        // 购物车切换
+        carTable.onclick = function () {
+            carTable.style.fontWeight = 'bolder';
+            msgContent.style.fontWeight = 'normal';
+            document.getElementById('car-content').style.display = 'block';
+            document.getElementById('msg-content').style.display = 'none';
+        }
+
+        // 执行讯息切换
+
+        msgContent.onclick = function () {
+            carTable.style.fontWeight = 'normal';
+            msgContent.style.fontWeight = 'bolder';
+            document.getElementById('car-content').style.display = 'none';
+            document.getElementById('msg-content').style.display = 'block';
+        }
+
+        // btn search
+        var searchBtn = document.getElementById('searchBtn');
+        searchBtn.onclick = function() {
+
+            //搜索条件
+            let params = {
+                class: menuNodeSelected[0] ? menuNodeSelected[0].innerText : '',
+                brand: document.getElementById('brand').value || '',
+                num: document.getElementById('num').value || '',
+                autoSearch: document.getElementById('autoSearch').value || '',
+            }
+            console.log(params);
+        }
+
+    });
+</script>
+
+<body>
+    <div class="view">
+        <div id="container" class="container">
+            <div id="left" class="left">
+                <div id="tab" class="tab-select">
+                    <div id="menuTab" class="tab actived">常用菜单</div>
+                    <div id="action" class="tab">快捷操作</div>
+                </div>
+                <div id="menuTabChild" class="labelCalss">
+                    <div id="all" class="title">
+                        <span id="expandAll" class="expand">+</span>
+                        <div id="titleLabel">所有商品</div>
+                    </div>
+                    <div id="menu" class="menu"></div>
+                </div>
+                <div id="actionTabChild" style="display: none;">
+                    在输入搜索条件后：<br>
+                    Enter: 自动查询<br>
+                    Space: 回到搜索条件<br>
+
+                </div>
+
+            </div>
+            <div id="main" class="main">
+                <div id="search" class="search">
+                    <div class="form">
+                        <div class="where">
+                            <div style="padding: 4px;display: flex;align-items: center;">
+
+                                <span class="width-3p5vw">商品品牌：</span>
+                                <select id="brand" class="width-6vw">
+                                    <option value=""></option>
+                                </select>
+                                <div class="inlink-block width-1vw"> </div>
+                                <span class="width-3p5vw">载入笔数:</span>
+                                <select id="num" class="width-6vw">
+                                    <option value="0"></option>
+                                    <option value="100">100</option>
+                                    <option value="50">50</option>
+                                    <option value="20">20</option>
+                                    <option value="10">10</option>
+                                </select>
+                                <div class="inlink-block width-1vw"> </div>
+                                <span class="width-3p5vw">自动搜索：</span>
+                                <select id="autoSearch" class="width-6vw">
+                                    <option value="0"></option>
+                                    <option value="1">1s</option>
+                                    <option value="2">2s</option>
+                                    <option value="3">3s</option>
+                                </select>
+
+                                <div class="inlink-block width-1vw"> </div>
+                                <input type="button" id="showRow" class="showRow" value="显示购物车行数"></input>
+
+                            </div>
+                            <div class="search-input">
+                                <span class="width-3p5vw">搜索商品：</span>
+                                <input class="width-15vw test" id="searchContent" type="text">
+                                <i class="icon-search">
+                                    <img src="./search.png" style="width: 1rem;height:1rem" alt="" srcset="">
+                                </i>
+                                </input>
+                                <div class="inlink-block width-1vw"></div>
+                                <input type="checkbox" id="selectAndNum" value="1" />选择商品时,同时输入数量
+                                <div class="inlink-block width-1vw"> </div>
+                                <input type="checkbox" id="noStock" value="1" />库存不等于0
+                            </div>
+
+                        </div>
+                        <div class="input-btn">
+                            <input id="searchBtn" class="btn" type="button" value="查询">
+                        </div>
+                    </div>
+
+                </div>
+                <div id="main-center" class="main-center">
+                    <div>
+                        <table id="search-table" class="table" border="0">
+                            <thead>
+                                <tr id="table-head" class="table-head">
+                                    <th class="width-8vw">选中</th>
+                                    <th class="width-8vw">品牌</th>
+                                    <th class="width-20vw">商品类别</th>
+                                    <th class="width-8vw">品名规格</th>
+                                    <th class="width-8vw">单位</th>
+                                    <th class="width-8vw">库存量</th>
+                                    <th class="width-8vw">单价</th>
+                                    <th class="width-8vw">赠品</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>我是固定的列</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+
+                                </tr>
+                                <tr>
+                                    <td>我是固定的列</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+
+                                </tr>
+                                <tr>
+                                    <td>我是固定的列</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+
+                                </tr>
+                                <tr>
+                                    <td>我是固定的列</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+
+                                </tr>
+                                <tr>
+                                    <td>我是固定的列</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+
+                                </tr>
+                                <tr>
+                                    <td>我是固定的列</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+
+                                </tr>
+                                <tr>
+                                    <td>我是固定的列</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+
+                                </tr>
+                                <tr>
+                                    <td>我是固定的列</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+
+                                </tr>
+                                <tr>
+                                    <td>我是固定的列</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+
+                                </tr>
+                                <tr>
+                                    <td>我是固定的列</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+
+                                </tr>
+                                <tr>
+                                    <td>我是固定的列</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+
+                                </tr>
+                                <tr>
+                                    <td>我是固定的列</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+
+                                </tr>
+                                <tr>
+                                    <td>我是固定的列</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+
+                                </tr>
+                                <tr>
+                                    <td>我是固定的列</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+
+                                </tr>
+                                <tr>
+                                    <td>我是固定的列</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+
+                                </tr>
+                                <tr>
+                                    <td>我是固定的列</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+
+                                </tr>
+                                <tr>
+                                    <td>我是固定的列</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+
+                                </tr>
+                            </tbody>
+
+
+                        </table>
+
+                    </div>
+                </div>
+                <div id="buy-car" class="buy-car">
+                    <div id="main-tab" class="main-tab">
+                        <span id="buy-tab" class="cursor-pointer"
+                            style="font-weight: bolder; padding-right: 16px">购物车</span>
+                        <span id="msg-tab" class="cursor-pointer">执行讯息</span>
+                    </div>
+                    <div id="car-content" class="car-content">
+                        <table id="car-table" class="table" border="0">
+                            <thead>
+                                <tr id="table-head" class="table-head">
+                                    <th class="width-8vw">库</th>
+                                    <th class="width-20vw">品名规格</th>
+                                    <th class="width-8vw">单位</th>
+                                    <th class="width-8vw">数量</th>
+                                    <th class="width-8vw">单价</th>
+                                    <th class="width-8vw">赠品</th>
+                                    <th class="width-8vw">备注</th>
+                                    <th class="width-8vw">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>我是固定的列</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+
+                                </tr>
+                                <tr>
+                                    <td>我是固定的列</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+
+                                </tr>
+                                <tr>
+                                    <td>我是固定的列</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+
+                                </tr>
+                                <tr>
+                                    <td>我是固定的列</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+
+                                </tr>
+                                <tr>
+                                    <td>我是固定的列</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+
+                                </tr>
+                                <tr>
+                                    <td>我是固定的列</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+
+                                </tr>
+                                <tr>
+                                    <td>我是固定的列</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+
+                                </tr>
+                                <tr>
+                                    <td>我是固定的列</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+
+                                </tr>
+                                <tr>
+                                    <td>我是固定的列</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+
+                                </tr>
+                                <tr>
+                                    <td>我是固定的列</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+
+                                </tr>
+                                <tr>
+                                    <td>我是固定的列</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+
+                                </tr>
+                                <tr>
+                                    <td>我是固定的列</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+
+                                </tr>
+                                <tr>
+                                    <td>我是固定的列</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+
+                                </tr>
+                                <tr>
+                                    <td>我是固定的列</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+
+                                </tr>
+                                <tr>
+                                    <td>我是固定的列</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+
+                                </tr>
+                                <tr>
+                                    <td>我是固定的列</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+
+                                </tr>
+                                <tr>
+                                    <td>我是固定的列</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+                                    <td>我是td中的内容</td>
+
+                                </tr>
+                            </tbody>
+
+
+
+                        </table>
+
+                    </div>
+                    <div id="msg-content" class="msg-content" style="display: none;">
+                        <div>执行讯息。执行讯息。执行讯息。执行讯息。执行讯息。</div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="footer" class="footer">
+            <div>执行自动搜索</div>
+            <div>
+                <button id="confirm">确定</button>
+                <button id="cancel">取消</button>
+            </div>
+        </div>
+    </div>
+
+
+</body>
+
+</html>
+
+<style>
+    @import url('./demo.css');
+
+    
+</style>

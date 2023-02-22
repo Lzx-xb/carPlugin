@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
+
+    <title>Document</title>
+</head>
+<!-- <script src="./input.js"></script> -->
+
+<body>
+    <button id="setupBtn" class="setupBtn">调起</button>
+</body>
+<script type="module">
+    import InputTest from "./input.js"
+    let a = new InputTest({
+        el: 'setupBtn',
+        success: (res) => {
+            console.log(res);
+        }
+    })
+    a.initDom();
+
+</script>
+
+</html>
+
+<style>
+    @import url('./demo.css');
+    .setupBtn {
+        border: none;
+        height: 40px;
+        width: 80px;
+        font-size: 1rem;
+        background-color: aquamarine;
+        color: #fff;
+        border-radius: 5px;
+    }
+    .setupBtn:hover{
+        background-color: aqua;
+    }
+</style>
